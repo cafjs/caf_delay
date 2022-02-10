@@ -1,0 +1,32 @@
+{
+    "name": "top",
+    "env" : {
+        "appProtocol" : "http",
+        "appPublisher" :"root",
+        "appLocalName" : "delay",
+        "appSuffix" : "vcap.me:3000"
+    },
+    "components": [
+        {
+            "name": "log",
+            "env" : {
+                  "logLevel" : "DEBUG"
+
+            }
+
+        },
+        {
+            "name": "security",
+            "module": null
+        },
+        {
+            "name": "delay",
+            "module": "../../index.js#plug",
+            "description": "Delay method service.",
+            "env" : {
+                "delayIntervalCheckInSec" : "process.env.DELAY_INTERVAL_CHECK_IN_SEC||1",
+                "ignoreAfterInSec" : "process.env.IGNORE_AFTER_IN_SEC||86400"
+            }
+        }
+    ]
+}
