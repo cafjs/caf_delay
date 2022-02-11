@@ -11,7 +11,15 @@ exports.methods = {
 
     async schedule(delay, delta) {
         const id = this.$.delay.scheduleWithOffset(
-            delay, '__ca_inc__', [delta], true
+            delay, '__ca_inc__', [delta], null, true
+        );
+        return [null, id];
+    },
+
+    async scheduleRepeat(delay, delta, interval, nTimes) {
+        const repeater = this.$.delay.newRepeater(interval, nTimes);
+        const id = this.$.delay.scheduleWithOffset(
+            delay, '__ca_inc__', [delta], repeater, true
         );
         return [null, id];
     },

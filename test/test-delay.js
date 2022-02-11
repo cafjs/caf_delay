@@ -125,5 +125,74 @@ module.exports = {
             test.ifError(err);
             test.done();
         }
+    },
+
+    async repeatMethod(test) {
+        const from1 = FROM_1;
+        test.expect(9);
+        try {
+            let s1 = new cli.Session('ws://root-delay.vcap.me:3000',
+                                     from1, {
+                                         from : from1
+                                     });
+            let p = await new Promise((resolve, reject) => {
+                s1.onopen = async function() {
+                    try {
+                        // 1. test NO cancelation
+                        // repeat 5 times, one every second
+                        let res = await s1.scheduleRepeat(1, 1, 1, 5)
+                            .getPromise();
+                        console.log(res);
+                        test.ok(typeof res === 'string');
+
+                        res = await s1.getState().getPromise();
+                        console.log(JSON.stringify(res));
+                        test.ok(Object.keys(res.pending).length === 1);
+                        test.ok(res.counter === 6);
+
+                        await setTimeoutPromise(7000);
+                        res = await s1.getState().getPromise();
+                        console.log(`RESULT: ${JSON.stringify(res)}`);
+                        test.ok(res.counter === 11);
+
+                        // 2. test cancelation
+
+                        res = await s1.scheduleRepeat(1, 3, 1, 5)
+                            .getPromise();
+                        console.log(res);
+                        test.ok(typeof res === 'string');
+
+                        res = await s1.cancel(res).getPromise();
+                        console.log(res);
+                        test.ok(Object.keys(res.pending).length === 0);
+                        test.ok(res.counter === 11);
+
+                        await setTimeoutPromise(7000);
+
+                        res = await s1.getState().getPromise();
+                        console.log(`RESULT: ${JSON.stringify(res)}`);
+                        test.ok(res.counter === 11);
+
+                        resolve(res);
+                    } catch (err) {
+                        test.ok(false, 'Got exception ' + err);
+                        reject(err);
+                    }
+                };
+                return [];
+            });
+
+            p = await new Promise((resolve, reject) => {
+                s1.onclose = function(err) {
+                    test.ifError(err);
+                    resolve(null);
+                };
+                s1.close();
+            });
+            test.done();
+        } catch (err) {
+            test.ifError(err);
+            test.done();
+        }
     }
 };
